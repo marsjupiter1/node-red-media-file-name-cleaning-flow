@@ -30,7 +30,7 @@
         "id": "40c62ed96f294be4",
         "type": "inject",
         "z": "be1caafef88954ca",
-        "name": "Set Initial Path",
+        "name": "Set Initial parameters",
         "props": [
             {
                 "p": "path",
@@ -41,6 +41,16 @@
                 "p": "tvseasons",
                 "v": "false",
                 "vt": "bool"
+            },
+            {
+                "p": "folders_change_limit",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "p": "strip_all",
+                "v": "false",
+                "vt": "bool"
             }
         ],
         "repeat": "",
@@ -48,7 +58,7 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 170,
+        "x": 200,
         "y": 60,
         "wires": [
             [
@@ -137,14 +147,14 @@
         "id": "a59d8f4559dcbafb",
         "type": "function",
         "z": "be1caafef88954ca",
-        "name": "If it's a directory enter it",
+        "name": "If it's a directory enter it, otherwise see if it's a media file",
         "func": "if (msg.type == \"D\"){\n    msg.component = msg.payload;\n    msg.path = msg.path+\"/\"+msg.payload;\n    return [msg,null];\n}\nreturn [null,msg];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1070,
+        "x": 1170,
         "y": 260,
         "wires": [
             [
@@ -272,7 +282,7 @@
         "type": "function",
         "z": "be1caafef88954ca",
         "name": "Deal with files with S8E2 type format",
-        "func": "msg.SE = msg.filename.match(\"(S[0-9]+E[0-9]+)\")\n\nvar pos = msg.filename.indexOf(msg.SE[0]);\nmsg.series = msg.filename.slice(0,pos-1);\nmsg.series = msg.series.replace(/\\./g,\" \");\nmsg.newfilename = msg.series+\" \"+msg.SE[0]+\".mkv\";\n\nif (msg.filename == msg.newfilename){\n    return\n}\n\nmsg.payload = \"rename \"+msg.filename + \" to \"+msg.newfilename;\nreturn msg;",
+        "func": "msg.SE = msg.filename.match(\"(S[0-9]+E[0-9]+)\")\n\nvar pos = msg.filename.indexOf(msg.SE[1]);\nmsg.series = msg.filename.slice(0,pos-1);\nmsg.series = msg.series.replace(/\\./g,\" \");\nif (msg.strip_all){\n    msg.newfilename = msg.series+\" \"+msg.SE[1]+\".mkv\";\n}else{\n    msg.newfilename = msg.series+\" \"+msg.SE[1]+\" \"+msg.filename.slice(pos+msg.SE[1].length+1);\n}\n\nif (msg.filename == msg.newfilename){\n    return\n}\n\nmsg.payload = \"rename \"+msg.filename + \" to \"+msg.newfilename;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -282,7 +292,7 @@
         "y": 460,
         "wires": [
             [
-                "673fc9f833225fc6"
+                "cd5d52c07483aac9"
             ]
         ]
     },
@@ -300,8 +310,8 @@
         "destFilename": "newfilename",
         "destFilenameType": "msg",
         "link": false,
-        "x": 1060,
-        "y": 520,
+        "x": 760,
+        "y": 660,
         "wires": [
             [
                 "9c7c7ade4623b27d"
@@ -324,17 +334,17 @@
         "z": "be1caafef88954ca",
         "name": "Connect the rename when happy",
         "info": "",
-        "x": 810,
-        "y": 520,
+        "x": 770,
+        "y": 560,
         "wires": []
     },
     {
         "id": "056e683f4a79b6ff",
         "type": "comment",
         "z": "be1caafef88954ca",
-        "name": "Set path and then inject",
+        "name": "Set path and then inject. Set tvseries to true if you are starting from a folder with TV content. Set folders_change_limit to limit the number of folders changed. strip_all false will leave the filename passed the series information intact.",
         "info": "",
-        "x": 160,
+        "x": 800,
         "y": 20,
         "wires": []
     },
@@ -353,7 +363,7 @@
         "type": "function",
         "z": "be1caafef88954ca",
         "name": "",
-        "func": "flow.set(\"series\",{})\nreturn msg;",
+        "func": "flow.set(\"series\",{})\nflow.set(\"paths\",{})\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -378,11 +388,30 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1150,
-        "y": 440,
+        "x": 770,
+        "y": 600,
         "wires": [
             [
                 "9c7c7ade4623b27d"
+            ]
+        ]
+    },
+    {
+        "id": "cd5d52c07483aac9",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "Respect the limit on how many folders we can change",
+        "func": "var paths = flow.get(\"paths\")||{};\nif (paths[msg.path] === undefined){ \n    paths[msg.path] = true;\n    flow.set(\"paths\",paths);\n    \n}\nvar length = Object.keys(paths).length;\nif (length <= msg.folders_change_limit){\n    return msg;\n}\nreturn;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 600,
+        "wires": [
+            [
+                "673fc9f833225fc6"
             ]
         ]
     }
