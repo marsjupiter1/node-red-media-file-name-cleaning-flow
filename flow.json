@@ -48,11 +48,11 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 270,
-        "y": 260,
+        "x": 170,
+        "y": 60,
         "wires": [
             [
-                "0c688b278a6bca93"
+                "936b49fa687b327a"
             ]
         ]
     },
@@ -175,7 +175,7 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 470,
+        "x": 510,
         "y": 100,
         "wires": [
             [
@@ -217,7 +217,7 @@
         "finalize": "",
         "libs": [],
         "x": 260,
-        "y": 460,
+        "y": 500,
         "wires": [
             [
                 "efe2463802ad4911"
@@ -234,7 +234,7 @@
         "rules": [
             {
                 "t": "regex",
-                "v": "(S[0-9]+E[0-9]+)",
+                "v": "\\.(S[0-9]+E[0-9]+)",
                 "vt": "str",
                 "case": false
             }
@@ -243,7 +243,7 @@
         "repair": false,
         "outputs": 1,
         "x": 480,
-        "y": 460,
+        "y": 500,
         "wires": [
             [
                 "3c4b2d38b9405f20"
@@ -259,12 +259,12 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1230,
-        "y": 460,
+        "x": 1250,
+        "y": 520,
         "wires": []
     },
     {
@@ -282,7 +282,7 @@
         "y": 460,
         "wires": [
             [
-                "9c7c7ade4623b27d"
+                "673fc9f833225fc6"
             ]
         ]
     },
@@ -301,7 +301,7 @@
         "destFilenameType": "msg",
         "link": false,
         "x": 1060,
-        "y": 500,
+        "y": 520,
         "wires": [
             [
                 "9c7c7ade4623b27d"
@@ -314,8 +314,8 @@
         "z": "be1caafef88954ca",
         "name": "scan into the directory",
         "info": "",
-        "x": 520,
-        "y": 200,
+        "x": 240,
+        "y": 260,
         "wires": []
     },
     {
@@ -334,8 +334,56 @@
         "z": "be1caafef88954ca",
         "name": "Set path and then inject",
         "info": "",
-        "x": 260,
-        "y": 180,
+        "x": 160,
+        "y": 20,
         "wires": []
+    },
+    {
+        "id": "3f76a32efc8e5097",
+        "type": "comment",
+        "z": "be1caafef88954ca",
+        "name": "try for just things that look malformed",
+        "info": "",
+        "x": 480,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "936b49fa687b327a",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "",
+        "func": "flow.set(\"series\",{})\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 160,
+        "wires": [
+            [
+                "0c688b278a6bca93"
+            ]
+        ]
+    },
+    {
+        "id": "673fc9f833225fc6",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "filter to one message per series",
+        "func": "var seen = flow.get(\"series\")||{};\nif (seen[msg.series] === undefined){ \n    seen[msg.series] = true;\n    flow.set(\"series\",seen);\n    return msg;\n}\nreturn;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1150,
+        "y": 440,
+        "wires": [
+            [
+                "9c7c7ade4623b27d"
+            ]
+        ]
     }
 ]
