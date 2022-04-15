@@ -1,0 +1,341 @@
+[
+    {
+        "id": "be1caafef88954ca",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "0c688b278a6bca93",
+        "type": "fs-ops-dir",
+        "z": "be1caafef88954ca",
+        "name": "Scan Path",
+        "path": "path",
+        "pathType": "msg",
+        "filter": "*",
+        "filterType": "str",
+        "dir": "payload",
+        "dirType": "msg",
+        "x": 470,
+        "y": 260,
+        "wires": [
+            [
+                "852d93e6c08c8cf6"
+            ]
+        ]
+    },
+    {
+        "id": "40c62ed96f294be4",
+        "type": "inject",
+        "z": "be1caafef88954ca",
+        "name": "Set Initial Path",
+        "props": [
+            {
+                "p": "path",
+                "v": "/home/martin",
+                "vt": "str"
+            },
+            {
+                "p": "tvseasons",
+                "v": "false",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 270,
+        "y": 260,
+        "wires": [
+            [
+                "0c688b278a6bca93"
+            ]
+        ]
+    },
+    {
+        "id": "852d93e6c08c8cf6",
+        "type": "split",
+        "z": "be1caafef88954ca",
+        "name": "Loop on each file/dir",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 680,
+        "y": 260,
+        "wires": [
+            [
+                "92fbe605cee19936"
+            ]
+        ]
+    },
+    {
+        "id": "92fbe605cee19936",
+        "type": "fs-ops-type",
+        "z": "be1caafef88954ca",
+        "name": "",
+        "path": "path",
+        "pathType": "msg",
+        "filename": "payload",
+        "filenameType": "msg",
+        "filetype": "type",
+        "filetypeType": "msg",
+        "x": 880,
+        "y": 260,
+        "wires": [
+            [
+                "a59d8f4559dcbafb"
+            ]
+        ]
+    },
+    {
+        "id": "72bb334c255eb69b",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "get file extension and process if we are in a TV folder",
+        "func": "msg.ext =  msg.payload.slice(msg.payload.length -4);\nif (msg.tvseasons){\n    return [msg,null];\n}\nreturn [null,msg];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 340,
+        "wires": [
+            [
+                "fcb7da8a13d0468d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "fcb7da8a13d0468d",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "Only process mkv files",
+        "func": "if (msg.ext != \".mkv\"){\n    return;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 340,
+        "wires": [
+            [
+                "d6bf2ea197cc0b2d"
+            ]
+        ]
+    },
+    {
+        "id": "a59d8f4559dcbafb",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "If it's a directory enter it",
+        "func": "if (msg.type == \"D\"){\n    msg.component = msg.payload;\n    msg.path = msg.path+\"/\"+msg.payload;\n    return [msg,null];\n}\nreturn [null,msg];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1070,
+        "y": 260,
+        "wires": [
+            [
+                "daf647942ee06b4f"
+            ],
+            [
+                "72bb334c255eb69b"
+            ]
+        ]
+    },
+    {
+        "id": "daf647942ee06b4f",
+        "type": "switch",
+        "z": "be1caafef88954ca",
+        "name": "does it look like a TV seaons folder?",
+        "property": "component",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "tv seasons",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 470,
+        "y": 100,
+        "wires": [
+            [
+                "a3f6c44cf43e10f7"
+            ],
+            [
+                "0c688b278a6bca93"
+            ]
+        ]
+    },
+    {
+        "id": "a3f6c44cf43e10f7",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "Mark here and onwards as TV",
+        "func": "msg.tvseasons = true;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 100,
+        "wires": [
+            [
+                "0c688b278a6bca93"
+            ]
+        ]
+    },
+    {
+        "id": "d6bf2ea197cc0b2d",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "",
+        "func": "msg.filename = msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 260,
+        "y": 460,
+        "wires": [
+            [
+                "efe2463802ad4911"
+            ]
+        ]
+    },
+    {
+        "id": "efe2463802ad4911",
+        "type": "switch",
+        "z": "be1caafef88954ca",
+        "name": "Filter files we need to sort out",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "regex",
+                "v": "(S[0-9]+E[0-9]+)",
+                "vt": "str",
+                "case": false
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 480,
+        "y": 460,
+        "wires": [
+            [
+                "3c4b2d38b9405f20"
+            ]
+        ]
+    },
+    {
+        "id": "9c7c7ade4623b27d",
+        "type": "debug",
+        "z": "be1caafef88954ca",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1230,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "3c4b2d38b9405f20",
+        "type": "function",
+        "z": "be1caafef88954ca",
+        "name": "Deal with files with S8E2 type format",
+        "func": "msg.SE = msg.filename.match(\"(S[0-9]+E[0-9]+)\")\n\nvar pos = msg.filename.indexOf(msg.SE[0]);\nmsg.series = msg.filename.slice(0,pos-1);\nmsg.series = msg.series.replace(/\\./g,\" \");\nmsg.newfilename = msg.series+\" \"+msg.SE[0]+\".mkv\";\n\nif (msg.filename == msg.newfilename){\n    return\n}\n\nmsg.payload = \"rename \"+msg.filename + \" to \"+msg.newfilename;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 460,
+        "wires": [
+            [
+                "9c7c7ade4623b27d"
+            ]
+        ]
+    },
+    {
+        "id": "9166e94baa32d3e2",
+        "type": "fs-ops-move",
+        "z": "be1caafef88954ca",
+        "name": "",
+        "sourcePath": "path",
+        "sourcePathType": "msg",
+        "sourceFilename": "filename",
+        "sourceFilenameType": "msg",
+        "destPath": "path",
+        "destPathType": "msg",
+        "destFilename": "newfilename",
+        "destFilenameType": "msg",
+        "link": false,
+        "x": 1060,
+        "y": 500,
+        "wires": [
+            [
+                "9c7c7ade4623b27d"
+            ]
+        ]
+    },
+    {
+        "id": "358b76b3882f851e",
+        "type": "comment",
+        "z": "be1caafef88954ca",
+        "name": "scan into the directory",
+        "info": "",
+        "x": 520,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "c7c9e356f519b11f",
+        "type": "comment",
+        "z": "be1caafef88954ca",
+        "name": "Connect the rename when happy",
+        "info": "",
+        "x": 810,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "056e683f4a79b6ff",
+        "type": "comment",
+        "z": "be1caafef88954ca",
+        "name": "Set path and then inject",
+        "info": "",
+        "x": 260,
+        "y": 180,
+        "wires": []
+    }
+]
